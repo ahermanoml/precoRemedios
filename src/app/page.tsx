@@ -18,6 +18,17 @@ interface Med {
   pmc: Record<string, number>;
 }
 
+const POPULAR_SEARCHES = [
+  "Dipirona",
+  "Paracetamol",
+  "Ibuprofeno",
+  "Amoxicilina",
+  "Losartana",
+  "Omeprazol",
+  "Rivotril",
+  "Dorflex",
+];
+
 // Translate ANVISA abbreviations to human-readable Portuguese
 const FORM_MAP: Record<string, string> = {
   "COM": "Comprimido",
@@ -597,6 +608,17 @@ export default function Home() {
             <p className="mt-1.5 text-sm text-muted-light">
               por nome, princípio ativo ou laboratório
             </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {POPULAR_SEARCHES.map((term) => (
+                <button
+                  key={term}
+                  onClick={() => handleInput(term)}
+                  className="rounded-full border border-border-subtle bg-foreground/[0.03] px-3 py-1 text-xs text-muted transition-colors hover:border-accent/40 hover:bg-accent-light hover:text-accent dark:bg-foreground/[0.05]"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
             <div className="mt-8 inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.03] px-3 py-1 text-[10px] text-muted-light dark:bg-foreground/[0.05]">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent/60" />
               Fonte: CMED/ANVISA &middot; Atualizado em fev/2026
