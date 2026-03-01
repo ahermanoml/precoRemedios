@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Fuse from "fuse.js";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import medsData from "../../../../public/data/meds.json";
 
 interface Med {
   id: number;
@@ -18,14 +17,12 @@ interface Med {
   pmc: Record<string, number>;
 }
 
+const meds: Med[] = medsData as Med[];
+
 let fuse: Fuse<Med> | null = null;
-let meds: Med[] = [];
 
 function getIndex() {
-  if (fuse) return { fuse, meds };
-
-  const filePath = resolve(process.cwd(), "public/data/meds.json");
-  meds = JSON.parse(readFileSync(filePath, "utf-8"));
+  if (fuse) return fuse;
 
   fuse = new Fuse(meds, {
     keys: [
@@ -39,7 +36,7 @@ function getIndex() {
     minMatchCharLength: 2,
   });
 
-  return { fuse, meds };
+  return fuse;
 }
 
 export async function GET(request: NextRequest) {
@@ -53,8 +50,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [], total: 0 });
   }
 
-  const { fuse } = getIndex();
-  const results = fuse!.search(q, { limit });
+  const fuse = getIndex();
+  const results = fuse.search(q, { limit });
 
   return NextResponse.json({
     results: results.map((r) => r.item),
