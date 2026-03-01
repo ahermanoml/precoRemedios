@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import Fuse from "fuse.js";
 
 interface Med {
   id: number;
@@ -413,38 +414,53 @@ function MedCard({
 export default function Home() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Med[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const fuseRef = useRef<Fuse<Med> | null>(null);
 
-  const search = useCallback(async (q: string) => {
+  useEffect(() => {
+    fetch("/data/meds.json")
+      .then((res) => res.json())
+      .then((data: Med[]) => {
+        fuseRef.current = new Fuse(data, {
+          keys: [
+            { name: "produto", weight: 3 },
+            { name: "substancia", weight: 2 },
+            { name: "laboratorio", weight: 1 },
+          ],
+          threshold: 0.3,
+        });
+        setDataLoading(false);
+      })
+      .catch(() => {
+        setDataLoading(false);
+      });
+  }, []);
+
+  const search = useCallback((q: string) => {
     if (q.length < 2) {
       setResults([]);
       setSearched(false);
       return;
     }
 
-    setLoading(true);
     setSearched(true);
 
-    try {
-      const res = await fetch(
-        `/api/search?q=${encodeURIComponent(q)}&limit=30`
-      );
-      const data = await res.json();
-      setResults(data.results);
-    } catch {
+    if (!fuseRef.current) {
       setResults([]);
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    const hits = fuseRef.current.search(q, { limit: 30 });
+    setResults(hits.map((h) => h.item));
   }, []);
 
   const handleInput = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(value), 300);
+    debounceRef.current = setTimeout(() => search(value), 150);
   };
 
   return (
@@ -497,7 +513,7 @@ export default function Home() {
               className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-12 text-[15px] text-foreground shadow-sm outline-none transition-all duration-200 placeholder:text-muted-light focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(13,107,88,0.08)] dark:focus:shadow-[0_0_0_3px_rgba(52,213,168,0.08)]"
               autoFocus
             />
-            {loading && (
+            {dataLoading && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
                 <div className="h-5 w-5 rounded-full border-2 border-accent/20 border-t-accent animate-spin" />
               </div>
@@ -508,8 +524,16 @@ export default function Home() {
 
       {/* Results */}
       <main className="mx-auto max-w-2xl px-5 py-6">
+        {/* Loading data */}
+        {dataLoading && (
+          <div className="py-24 text-center animate-fade-in-up">
+            <div className="mx-auto mb-4 h-8 w-8 rounded-full border-2 border-accent/20 border-t-accent animate-spin" />
+            <p className="text-sm text-muted">Carregando medicamentos...</p>
+          </div>
+        )}
+
         {/* No results */}
-        {!loading && searched && results.length === 0 && (
+        {!dataLoading && searched && results.length === 0 && (
           <div className="py-16 text-center animate-fade-in-up">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-foreground/5">
               <svg className="h-5 w-5 text-muted-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -526,7 +550,7 @@ export default function Home() {
         )}
 
         {/* Results list */}
-        {!loading && results.length > 0 && (
+        {!dataLoading && results.length > 0 && (
           <>
             <p className="mb-4 text-[11px] font-medium text-muted-light uppercase tracking-widest">
               {results.length} resultado{results.length !== 1 ? "s" : ""}
@@ -548,7 +572,7 @@ export default function Home() {
         )}
 
         {/* Empty state */}
-        {!loading && !searched && (
+        {!dataLoading && !searched && (
           <div className="py-24 text-center animate-fade-in-up">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-accent-light">
               <svg
