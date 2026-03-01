@@ -100,14 +100,29 @@ function parseApresentacao(raw: string): {
 } {
   const s = raw.trim();
 
-  // Extract concentration (at the start, e.g. "500 MG/ML", "10 MG/G + 0,443 MG/G", or "(500+125) MG")
-  const concMatch = s.match(
-    /^(\([\d,.+\s]+\)\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?(?:\s*\+\s*\(?[\d,.+\s]+\)?\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?)*)/i
-  ) || s.match(
-    /^([\d,.]+\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?(?:\s*\+\s*[\d,.]+\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?)*)/i
+  // Extract concentration at the start of the string.
+  // Handles: "500 MG", "10 MG/G + 0,443 MG/G", "(500+125) MG", "10 000 000 UI",
+  //          "300.000 U/ML", "9,6 MUI", "(5 MG + 250 UI)/G", "0,6 U/G + 0,01 G/G"
+  const UNIT = "(?:MUI|MG|MCG|ML|UI|U|ME|G|%)";
+  const UNIT_RATIO = `(?:${UNIT}(?:\\/(?:ML|G|L|DOSE|INAL|H|DIA|COM))?)`;
+  // Plain number: digits with comma/dot decimals and optional thousand-spaces (10 000 000)
+  const NUM = "[\\d][\\d,. ]*[\\d,]|[\\d]";
+  // Number inside parens: no spaces allowed (spaces mean + separator)
+  const PNUM = "[\\d][\\d,.]*";
+  // A parenthesized group like (500+125) or (2 + 0,035) or (5 MG + 250 UI)
+  const PAREN_GROUP = `\\(${PNUM}(?:\\s*(?:${UNIT_RATIO})?\\s*\\+\\s*${PNUM})*(?:\\s*${UNIT_RATIO})?\\s*\\)`;
+  // A value: paren group or plain number, followed by optional unit
+  const VALUE = `(?:(?:${PAREN_GROUP}|${NUM})\\s*${UNIT_RATIO}?)`;
+  // Full concentration: one or more values separated by +, with optional trailing /UNIT
+  const CONC_RE = new RegExp(
+    `^(${VALUE}(?:\\s*\\+\\s*${VALUE})*)(?:\\/${UNIT})?`,
+    "i"
   );
-  const concentracao = concMatch ? concMatch[1].trim() : "";
-  const rest = concMatch ? s.slice(concMatch[0].length).trim() : s;
+  const concMatch = s.match(CONC_RE);
+  // Only accept if we actually captured a unit (avoid matching bare numbers)
+  const hasUnit = concMatch?.[1] && new RegExp(UNIT, "i").test(concMatch[1]);
+  const concentracao = (concMatch && hasUnit) ? concMatch[0].trim() : "";
+  const rest = (concMatch && hasUnit) ? s.slice(concMatch[0].length).trim() : s;
 
   // Try to find the pharmaceutical form
   let forma = "";
