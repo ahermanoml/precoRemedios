@@ -100,8 +100,10 @@ function parseApresentacao(raw: string): {
 } {
   const s = raw.trim();
 
-  // Extract concentration (at the start, e.g. "500 MG/ML" or "10 MG/G + 0,443 MG/G")
+  // Extract concentration (at the start, e.g. "500 MG/ML", "10 MG/G + 0,443 MG/G", or "(500+125) MG")
   const concMatch = s.match(
+    /^(\([\d,.+\s]+\)\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?(?:\s*\+\s*\(?[\d,.+\s]+\)?\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?)*)/i
+  ) || s.match(
     /^([\d,.]+\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?(?:\s*\+\s*[\d,.]+\s*(?:MG|MCG|G|ML|UI|%|ME)(?:\/(?:ML|G|L|DOSE|INAL|H|DIA))?)*)/i
   );
   const concentracao = concMatch ? concMatch[1].trim() : "";
