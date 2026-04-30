@@ -513,6 +513,25 @@ export default function Home() {
             <strong className="font-semibold text-foreground">preço máximo</strong>{" "}
             que farmácias podem cobrar por medicamentos no Brasil, segundo a ANVISA/CMED.
           </p>
+          <a
+            href="https://medtupa.github.io/meds/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group mt-5 flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 shadow-sm transition-all duration-200 hover:border-accent/40 hover:shadow-[0_0_0_3px_rgba(13,107,88,0.08)] dark:hover:shadow-[0_0_0_3px_rgba(52,213,168,0.08)]"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-semibold text-foreground">MedTupa</div>
+              <div className="text-[13px] text-muted truncate">Guia Tupaciguara</div>
+            </div>
+            <svg className="h-4 w-4 shrink-0 text-muted-light transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
         </div>
       </header>
 
