@@ -39,7 +39,7 @@ export default function RootLayout({
         className={`${dmSans.variable} ${dmSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AppHeader />
-        <div className="pb-24">{children}</div>
+        <div className="pb-24 md:pb-12">{children}</div>
         <BottomNav />
       </body>
     </html>

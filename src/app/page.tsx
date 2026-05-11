@@ -697,24 +697,29 @@ export default function Home() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-5">
+    <main className="mx-auto max-w-5xl px-5 md:px-8">
       {/* Hero / search section */}
-      <section className="pt-8 pb-2">
-        <h1 className="text-center font-serif text-[38px] leading-[1.05] tracking-tight text-accent">
-          Preço máximo
-          <br />
-          de medicamentos
-          <br />
-          no Brasil<span className="text-accent-dark">.</span>
+      <section className="pt-8 md:pt-14 pb-2">
+        <h1 className="text-center font-serif text-[38px] md:text-[56px] leading-[1.05] tracking-tight text-accent">
+          <span className="md:hidden">
+            Preço máximo
+            <br />
+            de medicamentos
+            <br />
+            no Brasil<span className="text-accent-dark">.</span>
+          </span>
+          <span className="hidden md:inline">
+            Preço máximo de medicamentos no Brasil<span className="text-accent-dark">.</span>
+          </span>
         </h1>
-        <p className="mt-5 text-center text-[14px] leading-relaxed text-muted">
+        <p className="mt-5 md:mt-6 mx-auto max-w-md text-center text-[14px] md:text-[15px] leading-relaxed text-muted">
           Acesse a base de dados oficial e garanta a{" "}
           <span className="text-foreground">transparência</span> nos valores de
           medicamentos em todo o território nacional.
         </p>
 
         {/* Pill search bar with inline BUSCAR button */}
-        <div className="mt-6 relative">
+        <div className="mt-6 md:mt-8 relative mx-auto max-w-2xl">
           <svg
             className="absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-light"
             fill="none"
@@ -775,7 +780,7 @@ export default function Home() {
 
       {/* Results */}
       {!dataLoading && searched && (
-        <section className="mt-6">
+        <section className="mt-6 mx-auto max-w-2xl">
           {results.length === 0 ? (
             <div className="py-12 text-center animate-fade-in-up">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-foreground/5">
@@ -837,34 +842,36 @@ export default function Home() {
 
       {/* Info cards — only show when not searching */}
       {!searched && (
-        <section className="mt-6 space-y-3 animate-fade-in-up">
-          <InfoCard
-            href="/guia#pmc"
-            icon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8M14 7h7v7" />
-              </svg>
-            }
-            title="Como funciona o Preço Máximo?"
-            description="Entenda as regras que limitam os valores cobrados nas farmácias e protegem o consumidor."
-          />
-          <InfoCard
-            href="/guia#cmed"
-            icon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />
-              </svg>
-            }
-            title="O que é CMED?"
-            description="Conheça a Câmara de Regulação do Mercado de Medicamentos e seu papel no Brasil."
-          />
+        <section className="mt-8 md:mt-12 animate-fade-in-up">
+          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
+            <InfoCard
+              href="/guia#pmc"
+              icon={
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8M14 7h7v7" />
+                </svg>
+              }
+              title="Como funciona o Preço Máximo?"
+              description="Entenda as regras que limitam os valores cobrados nas farmácias e protegem o consumidor."
+            />
+            <InfoCard
+              href="/guia#cmed"
+              icon={
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />
+                </svg>
+              }
+              title="O que é CMED?"
+              description="Conheça a Câmara de Regulação do Mercado de Medicamentos e seu papel no Brasil."
+            />
+          </div>
 
           {/* MedTupa promo */}
           <a
             href="https://medtupa.github.io/meds/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative mt-1 flex items-center gap-4 overflow-hidden rounded-2xl border border-border bg-surface p-4 transition-all duration-200 hover:border-accent/30 hover:bg-surface-hover"
+            className="group relative mt-3 md:mt-4 flex items-center gap-4 overflow-hidden rounded-2xl border border-border bg-surface p-4 transition-all duration-200 hover:border-accent/30 hover:bg-surface-hover"
           >
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -106,16 +106,19 @@ const TONE_CLASSES: Record<Section["iconTone"], string> = {
 
 export default function GuiaPage() {
   return (
-    <main className="mx-auto max-w-2xl px-5 pt-6">
+    <main className="mx-auto max-w-3xl px-5 md:px-8 pt-6 md:pt-10">
       <div className="animate-fade-in-up">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
           Transparência
         </span>
-        <h1 className="mt-4 font-serif text-[40px] leading-[1.05] tracking-tight text-accent">
-          Guia do
-          <br />
-          Consumidor
+        <h1 className="mt-4 font-serif text-[40px] md:text-[60px] leading-[1.05] tracking-tight text-accent">
+          <span className="md:hidden">
+            Guia do
+            <br />
+            Consumidor
+          </span>
+          <span className="hidden md:inline">Guia do Consumidor</span>
         </h1>
         <p className="mt-4 text-[14px] leading-relaxed text-muted">
           Informações essenciais para garantir seus direitos na compra de medicamentos. Entenda
