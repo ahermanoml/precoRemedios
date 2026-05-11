@@ -601,11 +601,13 @@ function GroupCard({
 }
 
 function InfoCard({
+  index,
   href,
   icon,
   title,
   description,
 }: {
+  index: string;
   href: string;
   icon: React.ReactNode;
   title: string;
@@ -614,19 +616,30 @@ function InfoCard({
   return (
     <Link
       href={href}
-      className="group relative block overflow-hidden rounded-2xl border border-border bg-surface p-5 transition-all duration-200 hover:border-accent/30 hover:bg-surface-hover"
+      className="group relative block overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-surface/40 p-5 transition-all duration-300 hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-12px_rgba(34,211,238,0.15)]"
     >
-      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/[0.04] blur-2xl transition-opacity duration-300 group-hover:bg-accent/[0.08]" />
+      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent/[0.05] blur-2xl transition-all duration-300 group-hover:bg-accent/[0.1]" />
       <div className="relative">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
-          {icon}
+        <div className="flex items-center justify-between">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/15">
+            {icon}
+          </div>
+          <span className="font-mono text-[11px] tracking-[0.2em] text-muted-light">
+            {index}
+          </span>
         </div>
-        <h3 className="mt-4 text-[17px] font-semibold leading-tight text-accent">
+        <h3 className="mt-5 text-[17px] font-semibold leading-tight text-foreground transition-colors group-hover:text-accent">
           {title}
         </h3>
         <p className="mt-2 text-[13px] leading-relaxed text-muted">
           {description}
         </p>
+        <div className="mt-4 inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-accent/70 transition-all duration-200 group-hover:text-accent group-hover:gap-2.5">
+          Ler mais
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
       </div>
     </Link>
   );
@@ -697,10 +710,16 @@ export default function Home() {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-5 md:px-8">
+    <main className="mx-auto max-w-4xl px-5 md:px-8">
       {/* Hero / search section */}
-      <section className="pt-8 md:pt-14 pb-2">
-        <h1 className="text-center font-serif text-[38px] md:text-[56px] leading-[1.05] tracking-tight text-accent">
+      <section className="pt-8 md:pt-12 pb-2">
+        <div className="flex items-baseline gap-3 md:gap-4">
+          <span className="hidden md:inline font-mono text-[11px] tracking-[0.2em] text-muted-light">
+            01 / BUSCA
+          </span>
+          <span className="hidden md:block h-px flex-1 bg-border-subtle" />
+        </div>
+        <h1 className="mt-2 md:mt-6 text-center md:text-left font-serif text-[38px] md:text-[44px] leading-[1.05] tracking-tight text-accent">
           <span className="md:hidden">
             Preço máximo
             <br />
@@ -712,14 +731,14 @@ export default function Home() {
             Preço máximo de medicamentos no Brasil<span className="text-accent-dark">.</span>
           </span>
         </h1>
-        <p className="mt-5 md:mt-6 mx-auto max-w-md text-center text-[14px] md:text-[15px] leading-relaxed text-muted">
+        <p className="mt-4 md:mt-4 mx-auto md:mx-0 max-w-md md:max-w-xl text-center md:text-left text-[14px] leading-relaxed text-muted">
           Acesse a base de dados oficial e garanta a{" "}
           <span className="text-foreground">transparência</span> nos valores de
           medicamentos em todo o território nacional.
         </p>
 
         {/* Pill search bar with inline BUSCAR button */}
-        <div className="mt-6 md:mt-8 relative mx-auto max-w-2xl">
+        <div className="mt-6 relative">
           <svg
             className="absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-light"
             fill="none"
@@ -755,7 +774,7 @@ export default function Home() {
         </div>
 
         {/* Suggestion chips */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px]">
+        <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-[12px]">
           <span className="font-serif italic text-muted-light">Sugestões:</span>
           {POPULAR_SEARCHES.map((term) => (
             <button
@@ -842,9 +861,16 @@ export default function Home() {
 
       {/* Info cards — only show when not searching */}
       {!searched && (
-        <section className="mt-8 md:mt-12 animate-fade-in-up">
+        <section className="mt-10 md:mt-12 animate-fade-in-up">
+          <div className="hidden md:flex items-baseline gap-3 mb-5">
+            <span className="font-mono text-[11px] tracking-[0.2em] text-muted-light">
+              02 / ENTENDA
+            </span>
+            <span className="h-px flex-1 bg-border-subtle" />
+          </div>
           <div className="grid gap-3 md:grid-cols-2 md:gap-4">
             <InfoCard
+              index="01"
               href="/guia#pmc"
               icon={
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -855,6 +881,7 @@ export default function Home() {
               description="Entenda as regras que limitam os valores cobrados nas farmácias e protegem o consumidor."
             />
             <InfoCard
+              index="02"
               href="/guia#cmed"
               icon={
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
