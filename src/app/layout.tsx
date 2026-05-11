@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AppHeader } from "@/components/AppHeader";
+import { BottomNav } from "@/components/BottomNav";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -36,7 +38,9 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${dmSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
+        <AppHeader />
+        <div className="pb-24">{children}</div>
+        <BottomNav />
       </body>
     </html>
   );

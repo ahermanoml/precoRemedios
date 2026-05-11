@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Fuse from "fuse.js";
+import Link from "next/link";
 
 interface Med {
   id: number;
@@ -18,16 +19,7 @@ interface Med {
   pmc: Record<string, number>;
 }
 
-const POPULAR_SEARCHES = [
-  "Dipirona",
-  "Paracetamol",
-  "Ibuprofeno",
-  "Amoxicilina",
-  "Losartana",
-  "Omeprazol",
-  "Rivotril",
-  "Dorflex",
-];
+const POPULAR_SEARCHES = ["Dipirona", "Paracetamol", "Losartana"];
 
 // Translate ANVISA abbreviations to human-readable Portuguese
 const FORM_MAP: Record<string, string> = {
@@ -100,41 +92,29 @@ function parseApresentacao(raw: string): {
 } {
   const s = raw.trim();
 
-  // Extract concentration at the start of the string.
-  // Handles: "500 MG", "10 MG/G + 0,443 MG/G", "(500+125) MG", "10 000 000 UI",
-  //          "300.000 U/ML", "9,6 MUI", "(5 MG + 250 UI)/G", "0,6 U/G + 0,01 G/G"
   const UNIT = "(?:MUI|MG|MCG|ML|UI|U|ME|G|%)";
   const UNIT_RATIO = `(?:${UNIT}(?:\\/(?:ML|G|L|DOSE|INAL|H|DIA|COM))?)`;
-  // Plain number: digits with comma/dot decimals and optional thousand-spaces (10 000 000)
   const NUM = "[\\d][\\d,. ]*[\\d,]|[\\d]";
-  // Number inside parens: no spaces allowed (spaces mean + separator)
   const PNUM = "[\\d][\\d,.]*";
-  // A parenthesized group like (500+125) or (2 + 0,035) or (5 MG + 250 UI)
   const PAREN_GROUP = `\\(${PNUM}(?:\\s*(?:${UNIT_RATIO})?\\s*\\+\\s*${PNUM})*(?:\\s*${UNIT_RATIO})?\\s*\\)`;
-  // A value: paren group or plain number, followed by optional unit
   const VALUE = `(?:(?:${PAREN_GROUP}|${NUM})\\s*${UNIT_RATIO}?)`;
-  // Full concentration: one or more values separated by +, with optional trailing /UNIT
   const CONC_RE = new RegExp(
     `^(${VALUE}(?:\\s*\\+\\s*${VALUE})*)(?:\\/${UNIT})?`,
     "i"
   );
   const concMatch = s.match(CONC_RE);
-  // Only accept if we actually captured a unit (avoid matching bare numbers)
   const hasUnit = concMatch?.[1] && new RegExp(UNIT, "i").test(concMatch[1]);
   const concentracao = (concMatch && hasUnit) ? concMatch[0].trim() : "";
   const rest = (concMatch && hasUnit) ? s.slice(concMatch[0].length).trim() : s;
 
-  // Try to find the pharmaceutical form
   let forma = "";
   let afterForm = rest;
-  // Sort by length desc so we match longer forms first
   const sortedForms = Object.entries(FORM_MAP).sort(
     (a, b) => b[0].length - a[0].length
   );
   for (const [abbr, name] of sortedForms) {
     const idx = afterForm.toUpperCase().indexOf(abbr);
     if (idx !== -1) {
-      // Check it's a word boundary
       const before = idx === 0 || /\s/.test(afterForm[idx - 1]);
       const afterChar = afterForm[idx + abbr.length];
       const after = !afterChar || /\s/.test(afterChar);
@@ -148,12 +128,10 @@ function parseApresentacao(raw: string): {
     }
   }
 
-  // Parse the packaging/quantity from what remains
   let embalagem = "";
 
   const upper = afterForm.toUpperCase();
 
-  // Pattern 1: quantity of containers with volume
   const m1 = upper.match(
     /(\d+)\s*(AMP|SER PREENC|SER|FA|ENV|SAC|FLA|CAN|CAR)\b.*?X\s*([\d,.]+)\s*(ML|G|MG|L|DOSES?)/i
   );
@@ -166,7 +144,6 @@ function parseApresentacao(raw: string): {
   }
 
   if (!embalagem) {
-    // Pattern: "FR ... X 120 ML" -> frasco de 120 mL
     const m2 = upper.match(
       /(?:FR|TB|BG)\b.*?X\s*([\d,.]+)\s*(ML|G|MG|L)/i
     );
@@ -184,7 +161,6 @@ function parseApresentacao(raw: string): {
   }
 
   if (!embalagem) {
-    // Pattern: blíster X 30 -> 30 unidades
     const m3 = upper.match(/X\s*(\d+)\s*$/);
     if (m3) {
       const qty = m3[1];
@@ -224,7 +200,6 @@ function buildCardTitle(produto: string, parsed: ReturnType<typeof parseApresent
   }
   let suffix = "";
   if (parsed.embalagem) {
-    // Capitalize first letter
     suffix = parsed.embalagem.charAt(0).toUpperCase() + parsed.embalagem.slice(1);
   } else if (parsed.forma) {
     suffix = parsed.forma;
@@ -286,19 +261,19 @@ function formatCurrency(value: number) {
 function TipoBadge({ tipo }: { tipo: string }) {
   const config: Record<string, { classes: string; label: string }> = {
     "Genérico": {
-      classes: "bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-400",
+      classes: "bg-emerald-400/10 text-emerald-400",
       label: "Genérico",
     },
     "Similar": {
-      classes: "bg-amber-600/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400",
+      classes: "bg-amber-400/10 text-amber-400",
       label: "Similar",
     },
     "Novo": {
-      classes: "bg-sky-600/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-400",
+      classes: "bg-sky-400/10 text-sky-400",
       label: "Referência",
     },
     "Biológico": {
-      classes: "bg-violet-600/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-400",
+      classes: "bg-violet-400/10 text-violet-400",
       label: "Biológico",
     },
   };
@@ -320,7 +295,7 @@ function TarjaIndicator({ tarja }: { tarja: string }) {
   const lower = tarja.toLowerCase();
   if (lower.includes("preta")) {
     return (
-      <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl bg-gray-900 dark:bg-gray-200" />
+      <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl bg-gray-200" />
     );
   }
   if (lower.includes("vermelha")) {
@@ -338,7 +313,7 @@ function MedDetails({ med }: { med: Med }) {
         <svg className="h-4 w-4 shrink-0 mt-0.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <p className="text-xs text-accent-dark leading-relaxed dark:text-accent">
+        <p className="text-xs text-accent leading-relaxed">
           Preços máximos que farmácias podem cobrar, definidos pela CMED/ANVISA. O valor varia conforme a alíquota de ICMS do seu estado.
         </p>
       </div>
@@ -355,13 +330,13 @@ function MedDetails({ med }: { med: Med }) {
               className={`rounded-lg p-2.5 text-center transition-colors ${
                 isHighlighted
                   ? "bg-accent-light border border-accent/15"
-                  : "bg-foreground/[0.02] dark:bg-foreground/[0.04]"
+                  : "bg-foreground/[0.04]"
               }`}
             >
               <p className={`text-[10px] font-semibold uppercase tracking-wider ${isHighlighted ? "text-accent" : "text-muted-light"}`}>
                 ICMS {rate}
               </p>
-              <p className={`mt-0.5 text-sm font-bold tabular-nums ${isHighlighted ? "text-accent-dark dark:text-accent" : "text-foreground"}`}>
+              <p className={`mt-0.5 text-sm font-bold tabular-nums ${isHighlighted ? "text-accent" : "text-foreground"}`}>
                 {formatCurrency(price)}
               </p>
               <p className="mt-0.5 text-[9px] text-muted-light leading-tight">
@@ -378,7 +353,7 @@ function MedDetails({ med }: { med: Med }) {
         )}
         <span>{med.classeTerapeutica}</span>
         {med.restricaoHospitalar === "Sim" && (
-          <span className="font-semibold text-amber-600 dark:text-amber-400">
+          <span className="font-semibold text-amber-400">
             Uso hospitalar
           </span>
         )}
@@ -409,7 +384,7 @@ function MedCard({
 
   return (
     <div
-      className={`animate-fade-in-up ${staggerClass} group relative rounded-xl border border-border bg-surface transition-all duration-200 hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(13,107,88,0.1)] dark:hover:shadow-[0_2px_20px_-4px_rgba(52,213,168,0.08)]`}
+      className={`animate-fade-in-up ${staggerClass} group relative rounded-xl border border-border bg-surface transition-all duration-200 hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(34,211,238,0.1)]`}
     >
       <TarjaIndicator tarja={med.tarja} />
 
@@ -418,7 +393,6 @@ function MedCard({
         className="w-full text-left p-5 pl-6"
         aria-expanded={expanded}
       >
-        {/* Title line: product + concentration + packaging + badge */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
@@ -427,7 +401,6 @@ function MedCard({
               </h3>
               <TipoBadge tipo={med.tipo} />
             </div>
-            {/* Substance + forma */}
             <p className="mt-1.5 text-[13px] text-muted leading-snug">
               {med.substancia.toLowerCase().replace(/(^|\b)\w/g, (c) => c.toUpperCase())}
               {parsed.forma && (
@@ -436,7 +409,6 @@ function MedCard({
             </p>
           </div>
 
-          {/* Expand indicator */}
           <svg
             className={`h-4 w-4 shrink-0 text-muted-light mt-0.5 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
             fill="none"
@@ -448,7 +420,6 @@ function MedCard({
           </svg>
         </div>
 
-        {/* Price + lab row */}
         <div className="mt-3.5 flex items-end justify-between gap-4">
           <span className="text-[11px] text-muted-light tracking-wide uppercase truncate">
             {med.laboratorio}
@@ -493,7 +464,7 @@ function VariantRow({
       <TarjaIndicator tarja={med.tarja} />
       <button
         onClick={onToggle}
-        className="w-full text-left px-5 pl-6 py-3 transition-colors hover:bg-foreground/[0.02] dark:hover:bg-foreground/[0.03]"
+        className="w-full text-left px-5 pl-6 py-3 transition-colors hover:bg-foreground/[0.03]"
         aria-expanded={expanded}
       >
         <div className="flex items-center justify-between gap-3">
@@ -564,7 +535,7 @@ function GroupCard({
     <div
       className={`animate-fade-in-up ${staggerClass} group relative rounded-xl border border-border bg-surface transition-all duration-200 ${
         !groupExpanded
-          ? "hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(13,107,88,0.1)] dark:hover:shadow-[0_2px_20px_-4px_rgba(52,213,168,0.08)]"
+          ? "hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(34,211,238,0.1)]"
           : ""
       }`}
     >
@@ -626,6 +597,38 @@ function GroupCard({
         </div>
       )}
     </div>
+  );
+}
+
+function InfoCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative block overflow-hidden rounded-2xl border border-border bg-surface p-5 transition-all duration-200 hover:border-accent/30 hover:bg-surface-hover"
+    >
+      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/[0.04] blur-2xl transition-opacity duration-300 group-hover:bg-accent/[0.08]" />
+      <div className="relative">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+          {icon}
+        </div>
+        <h3 className="mt-4 text-[17px] font-semibold leading-tight text-accent">
+          {title}
+        </h3>
+        <p className="mt-2 text-[13px] leading-relaxed text-muted">
+          {description}
+        </p>
+      </div>
+    </Link>
   );
 }
 
@@ -694,227 +697,204 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/[0.03] via-transparent to-accent/[0.02]" />
-        <div className="relative mx-auto max-w-2xl px-5 pt-14 pb-10">
-          <div className="flex items-center gap-3">
-            {/* Pharmacy cross icon */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white shadow-sm">
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 2a1 1 0 00-1 1v4H3a1 1 0 00-1 1v4a1 1 0 001 1h4v4a1 1 0 001 1h4a1 1 0 001-1v-4h4a1 1 0 001-1V8a1 1 0 00-1-1h-4V3a1 1 0 00-1-1H8z" />
-              </svg>
+    <main className="mx-auto max-w-2xl px-5">
+      {/* Hero / search section */}
+      <section className="pt-8 pb-2">
+        <h1 className="text-center font-serif text-[38px] leading-[1.05] tracking-tight text-accent">
+          Preço máximo
+          <br />
+          de medicamentos
+          <br />
+          no Brasil<span className="text-accent-dark">.</span>
+        </h1>
+        <p className="mt-5 text-center text-[14px] leading-relaxed text-muted">
+          Acesse a base de dados oficial e garanta a{" "}
+          <span className="text-foreground">transparência</span> nos valores de
+          medicamentos em todo o território nacional.
+        </p>
+
+        {/* Pill search bar with inline BUSCAR button */}
+        <div className="mt-6 relative">
+          <svg
+            className="absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-light"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleInput(e.target.value)}
+            placeholder="Busca por nome, substância ou laboratório"
+            className="w-full rounded-full border border-border bg-surface py-3 pl-12 pr-[108px] text-[14px] text-foreground outline-none transition-all duration-200 placeholder:text-muted-light focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.08)]"
+          />
+          <button
+            type="button"
+            onClick={() => search(query)}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-accent px-5 py-2 text-[12px] font-bold tracking-widest text-background transition-colors hover:bg-accent-dark hover:text-foreground"
+          >
+            BUSCAR
+          </button>
+          {dataLoading && (
+            <div className="absolute -bottom-6 right-2">
+              <div className="h-3.5 w-3.5 rounded-full border-2 border-accent/20 border-t-accent animate-spin" />
             </div>
-            <h1 className="font-serif text-3xl text-foreground tracking-tight">
-              MedPreço
-            </h1>
-          </div>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted max-w-lg">
-            Consulte o{" "}
-            <strong className="font-semibold text-foreground">preço máximo</strong>{" "}
-            que farmácias podem cobrar por medicamentos no Brasil, segundo a ANVISA/CMED.
-          </p>
+          )}
+        </div>
+
+        {/* Suggestion chips */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[12px]">
+          <span className="font-serif italic text-muted-light">Sugestões:</span>
+          {POPULAR_SEARCHES.map((term) => (
+            <button
+              key={term}
+              onClick={() => handleInput(term)}
+              className="inline-flex items-center gap-1.5 text-accent transition-colors hover:text-accent-dark"
+            >
+              <span className="h-1 w-1 rounded-full bg-accent" />
+              {term}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Loading */}
+      {dataLoading && !searched && (
+        <div className="py-16 text-center animate-fade-in-up">
+          <div className="mx-auto mb-3 h-7 w-7 rounded-full border-2 border-accent/20 border-t-accent animate-spin" />
+          <p className="text-sm text-muted">Carregando medicamentos...</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {!dataLoading && searched && (
+        <section className="mt-6">
+          {results.length === 0 ? (
+            <div className="py-12 text-center animate-fade-in-up">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-foreground/5">
+                <svg className="h-5 w-5 text-muted-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+                </svg>
+              </div>
+              <p className="text-[15px] font-medium text-foreground">
+                Nenhum resultado para &ldquo;{query}&rdquo;
+              </p>
+              <p className="mt-1.5 text-sm text-muted">
+                Tente outro nome ou princípio ativo
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="mb-3 text-[11px] font-medium text-muted-light uppercase tracking-widest">
+                {groups.length} medicamento{groups.length !== 1 ? "s" : ""}
+                {results.length !== groups.length && (
+                  <span className="text-muted-light/60">
+                    {" "}
+                    · {results.length} apresentaç{results.length !== 1 ? "ões" : "ão"}
+                  </span>
+                )}
+              </p>
+              <div className="space-y-2.5">
+                {groups.map((g, i) =>
+                  g.meds.length === 1 ? (
+                    <MedCard
+                      key={g.meds[0].id}
+                      med={g.meds[0]}
+                      expanded={expandedId === g.meds[0].id}
+                      onToggle={() =>
+                        setExpandedId(
+                          expandedId === g.meds[0].id ? null : g.meds[0].id
+                        )
+                      }
+                      index={i}
+                    />
+                  ) : (
+                    <GroupCard
+                      key={g.key}
+                      meds={g.meds}
+                      groupExpanded={expandedGroups.has(g.key)}
+                      onGroupToggle={() => toggleGroup(g.key)}
+                      expandedMedId={expandedId}
+                      onMedToggle={(id) =>
+                        setExpandedId(expandedId === id ? null : id)
+                      }
+                      index={i}
+                    />
+                  )
+                )}
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
+      {/* Info cards — only show when not searching */}
+      {!searched && (
+        <section className="mt-6 space-y-3 animate-fade-in-up">
+          <InfoCard
+            href="/guia#pmc"
+            icon={
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8M14 7h7v7" />
+              </svg>
+            }
+            title="Como funciona o Preço Máximo?"
+            description="Entenda as regras que limitam os valores cobrados nas farmácias e protegem o consumidor."
+          />
+          <InfoCard
+            href="/guia#cmed"
+            icon={
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />
+              </svg>
+            }
+            title="O que é CMED?"
+            description="Conheça a Câmara de Regulação do Mercado de Medicamentos e seu papel no Brasil."
+          />
+
+          {/* MedTupa promo */}
           <a
             href="https://medtupa.github.io/meds/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative mt-6 flex items-center gap-4 overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/[0.08] via-accent/[0.04] to-transparent p-5 shadow-sm transition-all duration-200 hover:border-accent/50 hover:shadow-[0_8px_30px_-8px_rgba(13,107,88,0.25)] active:scale-[0.99] dark:hover:shadow-[0_8px_30px_-8px_rgba(52,213,168,0.2)]"
+            className="group relative mt-1 flex items-center gap-4 overflow-hidden rounded-2xl border border-border bg-surface p-4 transition-all duration-200 hover:border-accent/30 hover:bg-surface-hover"
           >
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent text-white shadow-md shadow-accent/20 transition-transform duration-200 group-hover:scale-105">
-              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-serif text-2xl text-foreground tracking-tight">MedTupa</span>
+                <span className="font-serif text-[18px] text-foreground tracking-tight">MedTupa</span>
                 <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">
                   Guia
                 </span>
               </div>
-              <div className="mt-1 text-[13px] text-muted leading-snug">
+              <div className="mt-0.5 text-[12px] text-muted leading-snug">
                 Farmácias e medicamentos em Tupaciguara
               </div>
             </div>
-            <svg className="h-5 w-5 shrink-0 text-accent transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="h-4 w-4 shrink-0 text-accent transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
-        </div>
-      </header>
 
-      {/* Sticky search bar */}
-      <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-2xl px-5 py-3">
-          <div className="relative">
-            <svg
-              className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-light"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => handleInput(e.target.value)}
-              placeholder="Buscar medicamento, princípio ativo ou laboratório..."
-              className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-12 text-[15px] text-foreground shadow-sm outline-none transition-all duration-200 placeholder:text-muted-light focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(13,107,88,0.08)] dark:focus:shadow-[0_0_0_3px_rgba(52,213,168,0.08)]"
-              autoFocus
-            />
-            {dataLoading && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="h-5 w-5 rounded-full border-2 border-accent/20 border-t-accent animate-spin" />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Results */}
-      <main className="mx-auto max-w-2xl px-5 py-6">
-        {/* Loading data */}
-        {dataLoading && (
-          <div className="py-24 text-center animate-fade-in-up">
-            <div className="mx-auto mb-4 h-8 w-8 rounded-full border-2 border-accent/20 border-t-accent animate-spin" />
-            <p className="text-sm text-muted">Carregando medicamentos...</p>
-          </div>
-        )}
-
-        {/* No results */}
-        {!dataLoading && searched && results.length === 0 && (
-          <div className="py-16 text-center animate-fade-in-up">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-foreground/5">
-              <svg className="h-5 w-5 text-muted-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
-              </svg>
-            </div>
-            <p className="text-[15px] font-medium text-foreground">
-              Nenhum resultado para &ldquo;{query}&rdquo;
-            </p>
-            <p className="mt-1.5 text-sm text-muted">
-              Tente outro nome ou princípio ativo
-            </p>
-          </div>
-        )}
-
-        {/* Results list */}
-        {!dataLoading && results.length > 0 && (
-          <>
-            <p className="mb-4 text-[11px] font-medium text-muted-light uppercase tracking-widest">
-              {groups.length} medicamento{groups.length !== 1 ? "s" : ""}
-              {results.length !== groups.length && (
-                <span className="text-muted-light/60">
-                  {" "}
-                  · {results.length} apresentaç{results.length !== 1 ? "ões" : "ão"}
-                </span>
-              )}
-            </p>
-            <div className="space-y-2.5">
-              {groups.map((g, i) =>
-                g.meds.length === 1 ? (
-                  <MedCard
-                    key={g.meds[0].id}
-                    med={g.meds[0]}
-                    expanded={expandedId === g.meds[0].id}
-                    onToggle={() =>
-                      setExpandedId(
-                        expandedId === g.meds[0].id ? null : g.meds[0].id
-                      )
-                    }
-                    index={i}
-                  />
-                ) : (
-                  <GroupCard
-                    key={g.key}
-                    meds={g.meds}
-                    groupExpanded={expandedGroups.has(g.key)}
-                    onGroupToggle={() => toggleGroup(g.key)}
-                    expandedMedId={expandedId}
-                    onMedToggle={(id) =>
-                      setExpandedId(expandedId === id ? null : id)
-                    }
-                    index={i}
-                  />
-                )
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Empty state */}
-        {!dataLoading && !searched && (
-          <div className="py-24 text-center animate-fade-in-up">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-accent-light">
-              <svg
-                className="h-9 w-9 text-accent animate-subtle-pulse"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <p className="text-base text-muted">
-              Busque entre{" "}
-              <strong className="font-semibold text-foreground">23 mil</strong>{" "}
-              medicamentos
-            </p>
-            <p className="mt-1.5 text-sm text-muted-light">
-              por nome, princípio ativo ou laboratório
-            </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              {POPULAR_SEARCHES.map((term) => (
-                <button
-                  key={term}
-                  onClick={() => handleInput(term)}
-                  className="rounded-full border border-border-subtle bg-foreground/[0.03] px-3 py-1 text-xs text-muted transition-colors hover:border-accent/40 hover:bg-accent-light hover:text-accent dark:bg-foreground/[0.05]"
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
-            <div className="mt-8 inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.03] px-3 py-1 text-[10px] text-muted-light dark:bg-foreground/[0.05]">
+          <div className="pt-2 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.04] px-3 py-1 text-[10px] text-muted-light">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent/60" />
-              Fonte: CMED/ANVISA &middot; Atualizado em fev/2026
-            </div>
+              Fonte: CMED/ANVISA · Atualizado em fev/2026
+            </span>
           </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="mt-auto border-t border-border-subtle py-8">
-        <div className="mx-auto max-w-2xl px-5 text-center text-xs leading-relaxed text-muted-light">
-          <p>
-            Os preços exibidos são os <strong className="font-medium text-muted">preços máximos ao consumidor</strong> (PMC)
-            definidos pela{" "}
-            <a
-              href="https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos"
-              className="underline underline-offset-2 decoration-muted-light/30 hover:text-accent hover:decoration-accent/30 transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              CMED/ANVISA
-            </a>
-            . Farmácias podem cobrar valores menores.
-          </p>
-          <p className="mt-1.5">
-            Este site não substitui orientação médica ou farmacêutica.
-          </p>
-        </div>
-      </footer>
-    </div>
+        </section>
+      )}
+    </main>
   );
 }
