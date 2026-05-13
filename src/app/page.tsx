@@ -384,7 +384,7 @@ function MedCard({
 
   return (
     <div
-      className={`animate-fade-in-up ${staggerClass} group relative rounded-xl border border-border bg-surface transition-all duration-200 hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(34,211,238,0.1)]`}
+      className={`animate-fade-in-up ${staggerClass} group relative rounded-xl border border-border bg-surface transition-all duration-200 hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(52,211,153,0.1)]`}
     >
       <TarjaIndicator tarja={med.tarja} />
 
@@ -535,7 +535,7 @@ function GroupCard({
     <div
       className={`animate-fade-in-up ${staggerClass} group relative rounded-xl border border-border bg-surface transition-all duration-200 ${
         !groupExpanded
-          ? "hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(34,211,238,0.1)]"
+          ? "hover:border-accent/30 hover:shadow-[0_2px_20px_-4px_rgba(52,211,153,0.1)]"
           : ""
       }`}
     >
@@ -616,7 +616,7 @@ function InfoCard({
   return (
     <Link
       href={href}
-      className="group relative block overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-surface/40 p-5 transition-all duration-300 hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-12px_rgba(34,211,238,0.15)]"
+      className="group relative block overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-surface/40 p-5 transition-all duration-300 hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-12px_rgba(52,211,153,0.15)]"
     >
       <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent/[0.05] blur-2xl transition-all duration-300 group-hover:bg-accent/[0.1]" />
       <div className="relative">
@@ -757,7 +757,7 @@ export default function Home() {
             value={query}
             onChange={(e) => handleInput(e.target.value)}
             placeholder="Busca por nome, substância ou laboratório"
-            className="w-full rounded-full border border-border bg-surface py-3 pl-12 pr-[108px] text-[14px] text-foreground outline-none transition-all duration-200 placeholder:text-muted-light focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.08)]"
+            className="w-full rounded-full border border-border bg-surface py-3 pl-12 pr-[108px] text-[14px] text-foreground outline-none transition-all duration-200 placeholder:text-muted-light focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(52,211,153,0.08)]"
           />
           <button
             type="button"
