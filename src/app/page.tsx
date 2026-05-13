@@ -242,11 +242,11 @@ function groupResults(results: Med[]): Array<{ key: string; meds: Med[] }> {
 
 const ICMS_STATES: Record<string, string> = {
   "0%": "Isentos de ICMS",
-  "12%": "MG, PR, SC, RS",
+  "12%": "PR, SC, RS",
   "17%": "AC, AL, AM, AP, BA, CE, DF, ES, GO, MA, MT, MS, PA, PB, PE, PI, RR, SE, TO",
-  "18%": "PR, SP",
+  "18%": "MG, PR, SP",
   "19%": "RJ",
-  "20%": "MG, RN",
+  "20%": "RN",
   "21%": "BA, RJ",
   "22%": "RJ",
 };
