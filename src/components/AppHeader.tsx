@@ -44,14 +44,6 @@ export function AppHeader() {
             );
           })}
         </nav>
-
-        <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
-          <svg className="h-3 w-3 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-          </svg>
-          SP <span className="text-muted-light">(ICMS)</span>
-        </div>
       </div>
     </header>
   );
