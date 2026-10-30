@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { UFS } from "@/lib/icms";
 
 export const metadata: Metadata = {
-  title: "Guia do Consumidor — MedPreço",
+  title: "Guia do Consumidor",
   description:
     "Informações essenciais sobre PMC, CMED, ICMS e como denunciar preços abusivos de medicamentos.",
+  alternates: { canonical: "/guia" },
 };
 
 type Section = {
@@ -62,11 +64,37 @@ const SECTIONS: Section[] = [
           </li>
           <li className="flex gap-2.5">
             <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent" />
-            <span>Registre a ocorrência no site oficial da Anvisa/CMED.</span>
+            <span>
+              Envie a nota fiscal à CMED pelo e-mail{" "}
+              <a href="mailto:cmed@anvisa.gov.br" className="text-accent underline underline-offset-2">
+                cmed@anvisa.gov.br
+              </a>
+              , informando o medicamento, a farmácia e o preço máximo da{" "}
+              <a
+                href="https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline underline-offset-2"
+              >
+                lista oficial
+              </a>
+              .
+            </span>
           </li>
           <li className="flex gap-2.5">
             <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent" />
-            <span>Procure o Procon da sua cidade para orientações.</span>
+            <span>
+              Procure o Procon da sua cidade ou registre uma reclamação no{" "}
+              <a
+                href="https://www.consumidor.gov.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline underline-offset-2"
+              >
+                consumidor.gov.br
+              </a>
+              .
+            </span>
           </li>
         </ul>
       </>
@@ -75,6 +103,30 @@ const SECTIONS: Section[] = [
   {
     id: "cmed",
     number: "3",
+    title: "O que é a CMED?",
+    iconTone: "muted",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />
+      </svg>
+    ),
+    body: (
+      <>
+        <p>
+          A <strong className="font-semibold text-foreground">Câmara de Regulação do Mercado de
+          Medicamentos (CMED)</strong> é o órgão interministerial, com secretaria executiva na Anvisa,
+          que define os preços máximos dos medicamentos vendidos no Brasil.
+        </p>
+        <p className="mt-3">
+          Todo ano, em abril, a CMED autoriza o reajuste dos preços, e ao longo do ano publica listas
+          atualizadas com novos produtos e correções. O MedPreço usa sempre a lista mais recente.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "icms",
+    number: "4",
     title: "Entendendo o ICMS",
     iconTone: "muted",
     icon: (
@@ -91,7 +143,23 @@ const SECTIONS: Section[] = [
         </p>
         <p className="mt-3">
           As alíquotas variam de acordo com o Estado brasileiro, o que explica por que o PMC de
-          um mesmo medicamento pode ser diferente entre regiões.
+          um mesmo medicamento pode ser diferente entre regiões. A alíquota usada no MedPreço para
+          cada estado:
+        </p>
+        <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3">
+          {UFS.map((u) => (
+            <li key={u.uf} className="flex justify-between gap-2 border-b border-border-subtle py-1">
+              <span>{u.nome}</span>
+              <span className="tabular-nums text-foreground">
+                {u.aliquota}
+                {u.aliquotaGenerico && <span className="text-muted-light"> ({u.aliquotaGenerico} genéricos)</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3">
+          Alguns princípios ativos são isentos de ICMS por convênio do CONFAZ; nesses casos vale o preço
+          da coluna &ldquo;ICMS 0%&rdquo;, que aparece no detalhe do medicamento.
         </p>
       </>
     ),

@@ -72,8 +72,10 @@ body {
   animation: fade-in-up 0.35s ease-out both;
 }
 
+/* "backwards": the max-height cap only applies while animating, so long
+   lists (a group with 40+ presentations) aren't clipped afterwards */
 .animate-expand-down {
-  animation: expand-down 0.3s ease-out both;
+  animation: expand-down 0.3s ease-out backwards;
   overflow: hidden;
 }
 
