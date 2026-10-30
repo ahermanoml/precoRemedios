@@ -1,0 +1,61 @@
+name: Atualiza lista da CMED
+
+# Toda segunda-feira, baixa a lista de preços (PMC) mais recente da CMED,
+# regenera public/data/meds.json e, se algo mudou, faz commit na main — o que
+# dispara o deploy na Vercel. Também pode ser rodado à mão em Actions.
+on:
+  schedule:
+    - cron: "17 11 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualiza-cmed
+  cancel-in-progress: false
+
+jobs:
+  atualiza:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Baixa a planilha da CMED
+        run: node scripts/fetch-cmed.mjs
+
+      - name: Gera meds.json
+        run: node scripts/parse-prices.mjs
+
+      - name: Verifica se a lista mudou
+        id: diff
+        run: |
+          if git diff --quiet -- public/data/meds.json src/data/cmed-meta.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Lista igual à publicada; nada a fazer."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "date=$(node -p "require('./src/data/cmed-meta.json').publicadaEm")" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Confere o build antes de publicar
+        if: steps.diff.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Commit e push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/meds.json src/data/cmed-meta.json
+          git commit -m "Atualiza lista da CMED (publicada em ${{ steps.diff.outputs.date }})"
+          git push origin HEAD:main

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# CMED spreadsheet (download with: node scripts/fetch-cmed.mjs)
+/scripts/pmc_raw.xlsx
